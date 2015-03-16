@@ -12,5 +12,6 @@
   "optionalDependencies": {},
   "engines": {
     "node": "*"
-  }
+  },
+  "license": "Apache 2.0"
 }
