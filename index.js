@@ -1,4 +1,4 @@
-'use strict'
+ 'use strict'
 
 var net = require('net')
   , tls = require('tls')
@@ -164,9 +164,10 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
       debug('tunneling socket could not be established, statusCode=%d', res.statusCode)
       var error = new Error('tunneling socket could not be established, ' + 'statusCode=' + res.statusCode)
       error.code = 'ECONNRESET'
-      options.request.emit('error', error)
+	cb(socket)
+      options.request.emit('error', error) // fire up error on ClientRequest.
       self.removeSocket(placeholder)
-	socket.destroy();
+	//socket.destroy();
     }
   }
 
