@@ -137,7 +137,22 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   connectReq.once('upgrade', onUpgrade)   // for v0.6
   connectReq.once('connect', onConnect)   // for v0.7 or later
   connectReq.once('error', onError)
+  connectReq.once('socket',onSocketAssigned)
   connectReq.end()
+
+  function onSocketAssigned(socket){
+    socket.setTimeout(options.timeout || 15000, function(){
+      connectReq.removeAllListeners()
+
+      var error = new Error('tunneling socket could not be established, ' + 'cause=http connect timeout');
+      error.code = 'ESOCKETTIMEDOUT';
+      debug('tunneling socket could not be established, cause=http connect timeout\n', error.stack);
+
+      socket.destroy();
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+    });
+  }
 
   function onResponse(res) {
     // Very hacky. This is necessary to avoid http-parser leaks.
