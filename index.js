@@ -141,16 +141,11 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   connectReq.end()
 
   function onSocketAssigned(socket){
-    socket.setTimeout(options.timeout || 15000, function(){
-      connectReq.removeAllListeners()
-
-      var error = new Error('tunneling socket could not be established, ' + 'cause=http connect timeout');
+    var timeout = options.timeout || 1500;
+    socket.setTimeout(timeout, function(){
+      var error = new Error('connect timeout');
       error.code = 'ESOCKETTIMEDOUT';
-      debug('tunneling socket could not be established, cause=http connect timeout\n', error.stack);
-
-      socket.destroy();
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
+      onError(error);
     });
   }
 
