@@ -141,7 +141,7 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   connectReq.end()
 
   function onSocketAssigned(socket){
-    var timeout = options.timeout || 1500;
+    var timeout = options.timeout || 15000;
     socket.setTimeout(timeout, function(){
       var error = new Error('connect timeout');
       error.code = 'ESOCKETTIMEDOUT';
