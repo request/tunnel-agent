@@ -137,17 +137,10 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   connectReq.once('upgrade', onUpgrade)   // for v0.6
   connectReq.once('connect', onConnect)   // for v0.7 or later
   connectReq.once('error', onError)
-  connectReq.once('socket',onSocketAssigned)
+  connectReq.setTimeout(options.timeout || 15000, function(){
+    connectReq.abort();
+  });
   connectReq.end()
-
-  function onSocketAssigned(socket){
-    var timeout = options.timeout || 15000;
-    socket.setTimeout(timeout, function(){
-      var error = new Error('connect timeout');
-      error.code = 'ESOCKETTIMEDOUT';
-      onError(error);
-    });
-  }
 
   function onResponse(res) {
     // Very hacky. This is necessary to avoid http-parser leaks.
