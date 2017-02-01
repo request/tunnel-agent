@@ -4,7 +4,6 @@ var net = require('net')
   , tls = require('tls')
   , http = require('http')
   , https = require('https')
-  , events = require('events')
   , assert = require('assert')
   , util = require('util')
   ;
@@ -67,7 +66,7 @@ function TunnelingAgent(options) {
     self.removeSocket(socket)
   })
 }
-util.inherits(TunnelingAgent, events.EventEmitter)
+util.inherits(TunnelingAgent, http.Agent)
 
 TunnelingAgent.prototype.addRequest = function addRequest(req, options) {
   var self = this
