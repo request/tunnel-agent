@@ -3,7 +3,7 @@
   "name": "tunnel-agent",
   "license": "Apache-2.0",
   "description": "HTTP proxy tunneling agent. Formerly part of mikeal/request, now a standalone module.",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "repository": {
     "url": "https://github.com/mikeal/tunnel-agent"
   },
