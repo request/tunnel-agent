@@ -1,4 +1,4 @@
-'use strict'
+ 'use strict'
 
 var net = require('net')
   , tls = require('tls')
@@ -138,6 +138,9 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   connectReq.once('upgrade', onUpgrade)   // for v0.6
   connectReq.once('connect', onConnect)   // for v0.7 or later
   connectReq.once('error', onError)
+  connectReq.setTimeout(options.timeout || 15000, function(){
+    connectReq.abort();
+  });
   connectReq.end()
 
   function onResponse(res) {
@@ -155,18 +158,18 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   function onConnect(res, socket, head) {
     connectReq.removeAllListeners()
     socket.removeAllListeners()
+    self.sockets[self.sockets.indexOf(placeholder)] = socket
 
     if (res.statusCode === 200) {
       assert.equal(head.length, 0)
       debug('tunneling connection has established')
-      self.sockets[self.sockets.indexOf(placeholder)] = socket
       cb(socket)
     } else {
       debug('tunneling socket could not be established, statusCode=%d', res.statusCode)
       var error = new Error('tunneling socket could not be established, ' + 'statusCode=' + res.statusCode)
       error.code = 'ECONNRESET'
-      options.request.emit('error', error)
-      self.removeSocket(placeholder)
+      cb(socket)
+      options.request.emit('error', error) // fire up error on ClientRequest.
     }
   }
 
