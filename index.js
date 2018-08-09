@@ -123,6 +123,7 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
     { method: 'CONNECT'
     , path: options.host + ':' + options.port
     , agent: false
+    , servername: self.proxyOptions.host
     }
   )
   if (connectOptions.proxyAuth) {
