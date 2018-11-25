@@ -4,8 +4,6 @@ var net = require('net')
   , tls = require('tls')
   , http = require('http')
   , https = require('https')
-  , events = require('events')
-  , assert = require('assert')
   , util = require('util')
   , Buffer = require('safe-buffer').Buffer
   ;
@@ -68,7 +66,7 @@ function TunnelingAgent(options) {
     self.removeSocket(socket)
   })
 }
-util.inherits(TunnelingAgent, events.EventEmitter)
+util.inherits(TunnelingAgent, http.Agent)
 
 TunnelingAgent.prototype.addRequest = function addRequest(req, options) {
   var self = this
@@ -123,6 +121,10 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
     { method: 'CONNECT'
     , path: options.host + ':' + options.port
     , agent: false
+    , headers: {
+        host: options.host + ':' + options.port
+      }
+    , servername: self.proxyOptions.host
     }
   )
   if (connectOptions.proxyAuth) {
@@ -138,6 +140,9 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   connectReq.once('upgrade', onUpgrade)   // for v0.6
   connectReq.once('connect', onConnect)   // for v0.7 or later
   connectReq.once('error', onError)
+  connectReq.setTimeout(options.timeout || 15000, function(){
+    connectReq.abort();
+  });
   connectReq.end()
 
   function onResponse(res) {
@@ -155,18 +160,17 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   function onConnect(res, socket, head) {
     connectReq.removeAllListeners()
     socket.removeAllListeners()
+    self.sockets[self.sockets.indexOf(placeholder)] = socket
 
-    if (res.statusCode === 200) {
-      assert.equal(head.length, 0)
+    if (res.statusCode === 200 && head.length == 0) {
       debug('tunneling connection has established')
-      self.sockets[self.sockets.indexOf(placeholder)] = socket
       cb(socket)
     } else {
       debug('tunneling socket could not be established, statusCode=%d', res.statusCode)
       var error = new Error('tunneling socket could not be established, ' + 'statusCode=' + res.statusCode)
       error.code = 'ECONNRESET'
-      options.request.emit('error', error)
-      self.removeSocket(placeholder)
+      cb(socket)
+      options.request.emit('error', error) // fire up error on ClientRequest.
     }
   }
 
@@ -200,7 +204,7 @@ function createSecureSocket(options, cb) {
   TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
     // 0 is dummy port for v0.6
     var secureSocket = tls.connect(0, mergeOptions({}, self.options,
-      { servername: options.host
+      { servername: self.options.servername || options.host
       , socket: socket
       }
     ))
