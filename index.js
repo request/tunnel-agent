@@ -52,6 +52,7 @@ function TunnelingAgent(options) {
   self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets
   self.requests = []
   self.sockets = []
+  self.response = null
 
   self.on('free', function onFree(socket, host, port) {
     for (var i = 0, len = self.requests.length; i < len; ++i) {
@@ -155,7 +156,8 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
   function onConnect(res, socket, head) {
     connectReq.removeAllListeners()
     socket.removeAllListeners()
-
+    self.response = res
+    
     if (res.statusCode === 200) {
       assert.equal(head.length, 0)
       debug('tunneling connection has established')
