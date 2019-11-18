@@ -157,18 +157,27 @@ TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
     socket.removeAllListeners()
 
     if (res.statusCode === 200) {
-      assert.equal(head.length, 0)
-      debug('tunneling connection has established')
-      self.sockets[self.sockets.indexOf(placeholder)] = socket
-      cb(socket)
-    } else {
-      debug('tunneling socket could not be established, statusCode=%d', res.statusCode)
-      var error = new Error('tunneling socket could not be established, ' + 'statusCode=' + res.statusCode)
-      error.code = 'ECONNRESET'
-      options.request.emit('error', error)
-      self.removeSocket(placeholder)
+        if(head.length === 0){
+          debug('tunneling connection has established')
+          self.sockets[self.sockets.indexOf(placeholder)] = socket
+          cb(socket)
+        }
+        else {
+          debug('tunneling socket could not be established, statusCode=%d', res.statusCode)
+          var error = new Error('tunneling socket could not be established - head length is not 0, ' + 'statusCode=' + res.statusCode)
+          error.code = 'ECONNRESET'
+          options.request.emit('error', error)
+          self.removeSocket(placeholder)
+        }
+
+      } else {
+        debug('tunneling socket could not be established, statusCode=%d', res.statusCode)
+        var error = new Error('tunneling socket could not be established, ' + 'statusCode=' + res.statusCode)
+        error.code = 'ECONNRESET'
+        options.request.emit('error', error)
+        self.removeSocket(placeholder)
+      }
     }
-  }
 
   function onError(cause) {
     connectReq.removeAllListeners()
